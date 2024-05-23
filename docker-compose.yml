@@ -1,0 +1,10 @@
+services:
+  mysql-db-backup:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    container_name: mysql-db-backup
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true

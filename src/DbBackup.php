@@ -1,5 +1,7 @@
 <?php
 
+namespace Indietorrent\MysqlDbBackup;
+
 /**
  * @author Ben Johnson (ben@indietorrent.org)
  * @copyright Copyright (c) 2012, Ben Johnson

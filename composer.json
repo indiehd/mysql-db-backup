@@ -1,0 +1,21 @@
+{
+    "name": "indietorrent/mysql-db-backup",
+    "description": "A simple package for dumping the contents of a MySQL or MariaDB database, i.e., on a schedule.",
+    "type": "library",
+    "require": {
+        "php": "> 5.0",
+        "ext-mysqli": "*"
+    },
+    "license": "GPL-3.0",
+    "autoload": {
+        "psr-4": {
+            "Indietorrent\\MysqlDbBackup\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ben Johnson"
+        }
+    ],
+    "minimum-stability": "stable"
+}
