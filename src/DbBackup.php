@@ -31,26 +31,40 @@ var_dump($conf, $hostname, $username, $password); // Debug line to print credent
 $mysqli = new \mysqli($hostname, $username, $password);
 
 if ($mysqli->connect_error) {
-    die('Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
+    die('Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error . PHP_EOL);
 }
+
+// List of system databases to exclude
+$system_databases = ['information_schema', 'performance_schema', 'mysql', 'sys'];
 
 $q = 'SHOW DATABASES';
 
 $r = $mysqli->query($q);
 
 while ($row = $r->fetch_assoc()) {
-    $targetDir = $dumpdir . DIRECTORY_SEPARATOR . $row['Database'];
+    $database = $row['Database'];
+    if (in_array($database, $system_databases)) {
+        echo 'Skipping system database: ' . $database . PHP_EOL;
+        continue; // Skip system databases
+    }
+
+    echo 'Processing database: ' . $database . PHP_EOL;
+
+    $targetDir = $dumpdir . DIRECTORY_SEPARATOR . $database;
+    echo 'Target directory for database "' . $database . '": ' . $targetDir . PHP_EOL;
 
     if (!is_dir($targetDir)) {
-        $madeDir = mkdir($targetDir);
+        echo 'Target directory does not exist. Creating...' . PHP_EOL;
+        $madeDir = mkdir($targetDir, 0777, true);
 
         if ($madeDir === FALSE) {
-            echo 'The directory "' . $targetDir . '" does not exist and could not be created; please check the permissions';
+            echo 'The directory "' . $targetDir . '" could not be created; please check the permissions' . PHP_EOL;
             exit;
         }
     }
 
     $dumpFileName = $targetDir . DIRECTORY_SEPARATOR . date('YmdHi') . '.sql';
+    echo 'Dump file name: ' . $dumpFileName . PHP_EOL;
 
     $cmd = 'mysqldump --skip-comments --add-drop-table --default-character-set=utf8 --extended-insert --host=' . $hostname . ' --quick --quote-names --routines --set-charset --single-transaction --triggers --tz-utc --verbose --user=' . $username;
 
@@ -58,19 +72,31 @@ while ($row = $r->fetch_assoc()) {
         $cmd .= ' --password=\'' . $password . '\'';
     }
 
-    $cmd .= ' "' . $row['Database'] . '" > "' . $dumpFileName . '"';
+    $cmd .= ' "' . $database . '" > "' . $dumpFileName . '"';
 
-    $return = system($cmd);
+    echo 'Executing command: ' . $cmd . PHP_EOL;
 
-    if ($return != 0 || !file_exists($dumpFileName)) {
-        echo 'The database "' . $row['Database'] . '" could not be dumped; exiting to prevent unexpected results' . PHP_EOL;
-        exit;
+    $output = [];
+    $return = 0;
+    exec($cmd, $output, $return);
+    echo 'Command return value: ' . $return . PHP_EOL;
+    echo 'Command output: ' . implode("\n", $output) . PHP_EOL;
+
+    // Check if the dump file exists
+    if (file_exists($dumpFileName)) {
+        echo 'Dump file "' . $dumpFileName . '" exists.' . PHP_EOL;
     } else {
-        echo 'The database "' . $row['Database'] . '" was dumped successfully to ' . $dumpFileName . PHP_EOL;
+        echo 'Dump file "' . $dumpFileName . '" does not exist.' . PHP_EOL;
+    }
+
+    // Ensure both conditions are met: return value is 0 and file exists
+    if ($return == 0 && file_exists($dumpFileName)) {
+        echo 'The database "' . $database . '" was dumped successfully to ' . $dumpFileName . PHP_EOL;
 
         $newFile = $dumpFileName;
 
         $existing = array_diff(scandir($targetDir, 1), array('..', '.'));
+        echo 'Existing files in target directory: ' . implode(', ', $existing) . PHP_EOL;
 
         if (!empty($existing) && is_array($existing) && count($existing) > 1) {
             for ($i = 0; $i < 2; $i++) {
@@ -117,6 +143,9 @@ while ($row = $r->fetch_assoc()) {
         } else {
             echo 'File was gzipped successfully to ' . $gzipped . PHP_EOL;
         }
+    } else {
+        echo 'The database "' . $database . '" could not be dumped; exiting to prevent unexpected results' . PHP_EOL;
+        exit;
     }
 }
 
@@ -125,7 +154,9 @@ $mysqli->close();
 function gzipFile($file) {
     $cmd = 'gzip "' . $file . '"';
 
-    $return = system($cmd);
+    $output = [];
+    $return = 0;
+    exec($cmd, $output, $return);
 
     if ($return != 0) {
         return FALSE;

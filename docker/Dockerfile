@@ -6,19 +6,24 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     zip \
+    default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions (adjust based on your needs)
-RUN docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install pdo pdo_mysql mysqli
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Copy project files
-COPY . /app
+# Copy the project files
+COPY src/ ./src/
+#COPY db-backup.ini.example ./db-backup.ini
 
-# Command to keep the container running
-CMD ["php", "-a"]
+# Ensure the script has execution permissions
+RUN chmod +x /app/src/DbBackup.php
+
+# Command to run the backup script
+CMD ["php", "/app/src/DbBackup.php"]
