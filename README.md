@@ -14,10 +14,26 @@ A PHP CLI tool for automated MySQL/MariaDB database backups with intelligent ded
 
 ## Requirements
 
-- PHP 8.0 or higher
-- `mysqli` PHP extension
+- PHP 8.0 or higher (for native installation)
+- `mysqli` PHP extension (for native installation)
+- **Docker** (for containerized installation - recommended)
 - MySQL or MariaDB server
-- System executables: `mysqldump`, `gzip`, `gunzip`, `sha1sum`
+- System executables: `mysqldump`, `gzip`, `gunzip`, `sha1sum` (included in Docker image)
+
+### Docker Setup Prerequisites
+
+If using Docker (recommended), ensure your user has Docker permissions:
+
+```bash
+# Add your user to the docker group
+sudo usermod -aG docker your_username
+
+# Log out and back in, or run:
+newgrp docker
+
+# Verify Docker access (should work without sudo)
+docker ps
+```
 
 ## Database User Setup
 
@@ -56,10 +72,12 @@ mysql -u backup -p
 **Configuration (.env):**
 ```bash
 DOCKER_NETWORK_MODE=host
-DB_HOST=localhost
+DB_HOST=127.0.0.1
 DB_USERNAME=backup
 DB_PASSWORD=your_secure_password
 ```
+
+**Important:** Use `127.0.0.1`, NOT `localhost`! See `.env.example` for explanation.
 
 **Security:** Most secure - only accepts connections from localhost
 
@@ -139,6 +157,53 @@ GRANT EVENT ON *.* TO 'backup'@'...';
 GRANT SELECT ON mysql.proc TO 'backup'@'...';
 ```
 
+## Quick Start (Docker - Recommended)
+
+Complete setup in 5 minutes for localhost MySQL:
+
+```bash
+# 1. Ensure user has Docker permissions
+sudo usermod -aG docker $USER
+newgrp docker  # Or log out/in
+
+# 2. Create backup user in MariaDB/MySQL
+sudo mysql <<EOF
+CREATE USER 'backup'@'localhost' IDENTIFIED BY 'your_secure_password';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON *.* TO 'backup'@'localhost';
+GRANT SELECT ON mysql.proc TO 'backup'@'localhost';
+FLUSH PRIVILEGES;
+EOF
+
+# 3. Clone and setup
+git clone https://github.com/indieTorrent/mysql-db-backup.git
+cd mysql-db-backup
+git checkout composer  # Or master after merge
+
+# 4. Build Docker image
+docker build -t mysql-db-backup -f docker/Dockerfile .
+
+# 5. Configure credentials
+cat > .env <<EOF
+DOCKER_NETWORK_MODE=host
+DB_HOST=127.0.0.1
+DB_USERNAME=backup
+DB_PASSWORD=your_secure_password
+EOF
+chmod 600 .env
+
+# 6. Test backup
+./run-backup.sh
+
+# 7. Schedule daily backups (2 AM)
+crontab -e
+# Add: 0 2 * * * /path/to/mysql-db-backup/run-backup.sh >> /var/log/mysql-backup.log 2>&1
+
+# 8. (Optional) Add retention - keep 30 days
+# Add: 0 3 * * 0 find /path/to/mysql-db-backup/backups -name "*.sql.gz" -mtime +30 -delete
+```
+
+Done! Your backups will run daily at 2 AM. ✅
+
 ## Installation
 
 ### Via Composer (Recommended)
@@ -184,7 +249,7 @@ dumpdir = /path/to/backups
 You can also configure using environment variables:
 
 ```bash
-export DB_HOST=localhost
+export DB_HOST=127.0.0.1      # Use 127.0.0.1, not localhost (for Docker)
 export DB_USERNAME=your_mysql_user
 export DB_PASSWORD=your_mysql_password
 export BACKUP_DIR=/path/to/backups
@@ -311,6 +376,26 @@ The dump files are created **without comments** (via `--skip-comments`) to ensur
 └── database3/
     └── 202602251400.sql.gz
 ```
+
+## Backup Retention
+
+**Important:** This tool does NOT automatically delete old backups. Backups will accumulate over time.
+
+### Recommended: Add a Cleanup Cron Job
+
+To prevent unlimited backup growth, add a retention policy:
+
+```cron
+# Keep backups for 30 days (weekly cleanup)
+0 3 * * 0 find /path/to/backups -name "*.sql.gz" -mtime +30 -delete
+```
+
+**Common retention periods:**
+- Development: 7-14 days
+- Production: 30-90 days
+- Compliance: May require longer (consult your requirements)
+
+**Future Enhancement:** Built-in retention policies are planned for a future release.
 
 ## Troubleshooting
 
