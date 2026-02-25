@@ -19,6 +19,126 @@ A PHP CLI tool for automated MySQL/MariaDB database backups with intelligent ded
 - MySQL or MariaDB server
 - System executables: `mysqldump`, `gzip`, `gunzip`, `sha1sum`
 
+## Database User Setup
+
+### Choose Your Deployment Scenario
+
+Pick the option that matches your setup:
+
+| Scenario | User Setup | Network Mode | Best For |
+|----------|-----------|--------------|----------|
+| **A: Localhost MySQL** | `'backup'@'localhost'` | `--network host` | Single server, MySQL on localhost (simplest) |
+| **B: Isolated Container** | `'backup'@'%'` | `bridge` (default) | Better isolation, any Docker setup |
+| **C: Multi-Container** | `'backup'@'%'` | Custom network | MySQL in another container |
+
+### Scenario A: Localhost MySQL (Recommended for Single Server)
+
+**Best for:** MySQL/MariaDB running on the same server as Docker
+
+```sql
+-- Log in to MySQL/MariaDB as root
+sudo mysql
+
+-- Create backup user for localhost connections
+CREATE USER 'backup'@'localhost' IDENTIFIED BY 'your_secure_password';
+
+-- Grant necessary permissions for full database backups
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON *.* TO 'backup'@'localhost';
+GRANT SELECT ON mysql.proc TO 'backup'@'localhost';
+
+FLUSH PRIVILEGES;
+EXIT;
+
+-- Test it
+mysql -u backup -p
+```
+
+**Configuration (.env):**
+```bash
+DOCKER_NETWORK_MODE=host
+DB_HOST=localhost
+DB_USERNAME=backup
+DB_PASSWORD=your_secure_password
+```
+
+**Security:** Most secure - only accepts connections from localhost
+
+### Scenario B: Bridge Network (Better Isolation)
+
+**Best for:** When you want container isolation or don't want to use `--network host`
+
+```sql
+sudo mysql
+
+-- Create backup user that accepts connections from any IP
+-- Still secure because it requires password and MySQL should be firewalled
+CREATE USER 'backup'@'%' IDENTIFIED BY 'your_strong_password';
+
+-- Or restrict to Docker networks only (more restrictive)
+-- CREATE USER 'backup'@'172.%' IDENTIFIED BY 'your_strong_password';
+
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON *.* TO 'backup'@'%';
+GRANT SELECT ON mysql.proc TO 'backup'@'%';
+
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+**Configuration (.env):**
+```bash
+DOCKER_NETWORK_MODE=bridge
+DB_HOST=172.17.0.1        # Docker bridge gateway (usually stable)
+# Or on some systems: DB_HOST=host.docker.internal
+DB_USERNAME=backup
+DB_PASSWORD=your_strong_password
+```
+
+**Security:** Good - relies on password auth and firewall. Ensure MySQL is not exposed to internet!
+
+### Scenario C: Multi-Container Setup
+
+**Best for:** MySQL running in another Docker container
+
+```sql
+-- Same as Scenario B
+CREATE USER 'backup'@'%' IDENTIFIED BY 'your_strong_password';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON *.* TO 'backup'@'%';
+GRANT SELECT ON mysql.proc TO 'backup'@'%';
+FLUSH PRIVILEGES;
+```
+
+**Configuration (.env):**
+```bash
+DOCKER_NETWORK_MODE=your_mysql_network_name
+DB_HOST=mysql_container_name  # Name of your MySQL container
+DB_USERNAME=backup
+DB_PASSWORD=your_strong_password
+```
+
+### Quick Reference: Permission Grants
+
+The minimum permissions needed for backups:
+
+```sql
+-- Read all tables
+GRANT SELECT ON *.* TO 'backup'@'...';
+
+-- Lock tables during backup (for consistency)
+GRANT LOCK TABLES ON *.* TO 'backup'@'...';
+
+-- Backup views
+GRANT SHOW VIEW ON *.* TO 'backup'@'...';
+
+-- Backup triggers
+GRANT TRIGGER ON *.* TO 'backup'@'...';
+
+-- Backup events (scheduled tasks)
+GRANT EVENT ON *.* TO 'backup'@'...';
+
+-- Backup stored procedures/functions
+GRANT SELECT ON mysql.proc TO 'backup'@'...';
+```
+
 ## Installation
 
 ### Via Composer (Recommended)
@@ -108,17 +228,57 @@ Or if using environment variables:
 
 ### Docker Usage
 
-Build and run with Docker Compose:
+**For complete Docker deployment guide, see [DOCKER.md](DOCKER.md)**
+
+#### Quick Start with Docker
 
 ```bash
-docker-compose up
+# 1. Clone and build
+git clone https://github.com/indieTorrent/mysql-db-backup.git
+cd mysql-db-backup
+git checkout composer
+docker build -t mysql-db-backup -f docker/Dockerfile .
+
+# 2. Create environment file (configure based on your scenario - see Database User Setup above)
+cp .env.example .env
+nano .env  # Edit with your credentials and network mode
+chmod 600 .env
+
+# 3. Test one-time backup
+./run-backup.sh
+
+# 4. Set up scheduled backups with cron
+crontab -e
+# Add: 0 2 * * * /path/to/mysql-db-backup/run-backup.sh >> /var/log/mysql-backup.log 2>&1
 ```
 
-Or build manually:
+**The `run-backup.sh` script automatically handles different network modes based on your `.env` configuration.**
+
+#### Manual Docker Run (if not using run-backup.sh)
+
+**Scenario A - Host Network:**
+```bash
+docker run --rm --network host --env-file .env \
+  -v $(pwd)/backups:/backups mysql-db-backup
+```
+
+**Scenario B - Bridge Network:**
+```bash
+docker run --rm --env-file .env \
+  -v $(pwd)/backups:/backups mysql-db-backup
+```
+
+**Scenario C - Custom Network:**
+```bash
+docker run --rm --network your_network --env-file .env \
+  -v $(pwd)/backups:/backups mysql-db-backup
+```
+
+#### Using docker-compose
 
 ```bash
-docker build -t mysql-db-backup -f docker/Dockerfile .
-docker run -v /path/to/backups:/backups mysql-db-backup
+# Edit .env file first, then:
+docker-compose up
 ```
 
 ## How It Works
