@@ -58,10 +58,10 @@ while ($row = $r->fetch_assoc()) {
 	}
 	
 	$cmd .= ' "' . $row['Database'] . '" > "' . $dumpFileName . '"';
-	
-	$return = system($cmd);
-	
-	if ($return != 0 || !file_exists($dumpFileName)) {
+
+	$return = system($cmd, $retVal);
+
+	if ($retVal != 0 || !file_exists($dumpFileName)) {
 		echo 'The database "' . $row['Database'] . '" could not be dumped; exiting to prevent unexpected results' . PHP_EOL;
 		exit;
 	}
@@ -135,10 +135,10 @@ $mysqli->close();
 
 function gzipFile($file) {
 	$cmd = 'gzip "' . $file . '"';
-	
-	$return = system($cmd);
-	
-	if ($return != 0) {
+
+	$return = system($cmd, $retVal);
+
+	if ($retVal != 0) {
 		return FALSE;
 	}
 	else {
