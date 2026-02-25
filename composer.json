@@ -1,21 +1,35 @@
 {
     "name": "indietorrent/mysql-db-backup",
-    "description": "A simple package for dumping the contents of a MySQL or MariaDB database, i.e., on a schedule.",
+    "description": "A CLI tool for automated MySQL/MariaDB database backups with intelligent deduplication and compression. Perfect for scheduled cron jobs.",
     "type": "library",
+    "keywords": [
+        "mysql",
+        "mariadb",
+        "backup",
+        "database",
+        "mysqldump",
+        "cron",
+        "automation"
+    ],
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Ben Johnson",
+            "email": "ben@indietorrent.org"
+        }
+    ],
     "require": {
-        "php": "> 5.0",
+        "php": ">=8.0",
         "ext-mysqli": "*"
     },
-    "license": "GPL-3.0",
     "autoload": {
         "psr-4": {
             "Indietorrent\\MysqlDbBackup\\": "src/"
         }
     },
-    "authors": [
-        {
-            "name": "Ben Johnson"
-        }
+    "bin": [
+        "bin/mysql-db-backup"
     ],
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
