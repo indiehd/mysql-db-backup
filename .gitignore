@@ -1,5 +1,12 @@
 # Configuration
 /db-backup.ini
+.env
+
+# Backups
+/db-backups/
+/backups/
+*.sql
+*.sql.gz
 
 # Composer
 /vendor/
