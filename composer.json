@@ -1,5 +1,5 @@
 {
-    "name": "indietorrent/mysql-db-backup",
+    "name": "indiehd/mysql-db-backup",
     "description": "A CLI tool for automated MySQL/MariaDB database backups with intelligent deduplication and compression. Perfect for scheduled cron jobs.",
     "type": "library",
     "keywords": [
@@ -15,7 +15,7 @@
     "authors": [
         {
             "name": "Ben Johnson",
-            "email": "ben@indietorrent.org"
+            "email": "ben@indiehd.com"
         }
     ],
     "require": {
@@ -24,7 +24,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Indietorrent\\MysqlDbBackup\\": "src/"
+            "IndieHD\\MysqlDbBackup\\": "src/"
         }
     },
     "bin": [

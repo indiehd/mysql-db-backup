@@ -4,8 +4,8 @@
 /**
  * MySQL Database Backup CLI Tool
  *
- * @author Ben Johnson (ben@indietorrent.org)
- * @copyright Copyright (c) 2012, Ben Johnson
+ * @author Ben Johnson (ben@indiehd.com)
+ * @copyright Copyright (c) 2012-2026, Ben Johnson
  * @license GNU General Public License, Version 3 (GPLv3)
  */
 
@@ -29,7 +29,7 @@ if (!$autoloadFound) {
     exit(1);
 }
 
-use Indietorrent\MysqlDbBackup\DbBackup;
+use IndieHD\MysqlDbBackup\DbBackup;
 
 try {
     // Determine config file path (same directory as this executable, or project root)

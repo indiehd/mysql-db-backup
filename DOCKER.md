@@ -8,7 +8,7 @@ This guide covers running MySQL Database Backup in a fully containerized environ
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/indieTorrent/mysql-db-backup.git
+git clone https://github.com/indiehd/mysql-db-backup.git
 cd mysql-db-backup
 git checkout composer
 
@@ -275,7 +275,7 @@ mkdir -p /opt/mysql-backup/backups
 cd /opt/mysql-backup
 
 # 2. Clone and build
-git clone https://github.com/indieTorrent/mysql-db-backup.git .
+git clone https://github.com/indiehd/mysql-db-backup.git .
 git checkout composer
 docker build -t mysql-db-backup:latest -f docker/Dockerfile .
 

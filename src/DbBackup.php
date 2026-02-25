@@ -1,6 +1,6 @@
 <?php
 
-namespace Indietorrent\MysqlDbBackup;
+namespace IndieHD\MysqlDbBackup;
 
 use mysqli;
 use Exception;
@@ -11,8 +11,8 @@ use Exception;
  * Automates the routine export of MySQL/MariaDB databases with intelligent
  * deduplication and compression.
  *
- * @author Ben Johnson (ben@indietorrent.org)
- * @copyright Copyright (c) 2012, Ben Johnson
+ * @author Ben Johnson (ben@indiehd.com)
+ * @copyright Copyright (c) 2012-2026, Ben Johnson
  * @license GNU General Public License, Version 3 (GPLv3)
  */
 class DbBackup

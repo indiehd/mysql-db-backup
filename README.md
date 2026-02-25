@@ -175,7 +175,7 @@ FLUSH PRIVILEGES;
 EOF
 
 # 3. Clone and setup
-git clone https://github.com/indieTorrent/mysql-db-backup.git
+git clone https://github.com/indiehd/mysql-db-backup.git
 cd mysql-db-backup
 git checkout composer  # Or master after merge
 
@@ -209,13 +209,13 @@ Done! Your backups will run daily at 2 AM. ✅
 ### Via Composer (Recommended)
 
 ```bash
-composer require indietorrent/mysql-db-backup
+composer require indiehd/mysql-db-backup
 ```
 
 ### Manual Installation
 
 ```bash
-git clone https://github.com/yourusername/mysql-db-backup.git
+git clone https://github.com/indiehd/mysql-db-backup.git
 cd mysql-db-backup
 composer install
 ```
@@ -299,7 +299,7 @@ Or if using environment variables:
 
 ```bash
 # 1. Clone and build
-git clone https://github.com/indieTorrent/mysql-db-backup.git
+git clone https://github.com/indiehd/mysql-db-backup.git
 cd mysql-db-backup
 git checkout composer
 docker build -t mysql-db-backup -f docker/Dockerfile .
@@ -429,6 +429,6 @@ GNU General Public License v3.0 or later (GPL-3.0-or-later)
 
 ## Author
 
-Ben Johnson (ben@indietorrent.org)
+Ben Johnson (ben@indiehd.com)
 
-Copyright (c) 2012, Ben Johnson
+Copyright (c) 2012-2026, Ben Johnson
