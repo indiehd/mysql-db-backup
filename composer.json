@@ -1,0 +1,35 @@
+{
+    "name": "indiehd/mysql-db-backup",
+    "description": "A CLI tool for automated MySQL/MariaDB database backups with intelligent deduplication and compression. Perfect for scheduled cron jobs.",
+    "type": "library",
+    "keywords": [
+        "mysql",
+        "mariadb",
+        "backup",
+        "database",
+        "mysqldump",
+        "cron",
+        "automation"
+    ],
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Ben Johnson",
+            "email": "ben@indiehd.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "ext-mysqli": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "IndieHD\\MysqlDbBackup\\": "src/"
+        }
+    },
+    "bin": [
+        "bin/mysql-db-backup"
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

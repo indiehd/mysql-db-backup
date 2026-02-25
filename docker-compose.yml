@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  mysql-db-backup:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    container_name: mysql-db-backup
+    environment:
+      # Database connection settings
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      # Backup settings
+      BACKUP_DIR: /backups
+    volumes:
+      # Mount backup directory from host
+      - ${HOST_BACKUP_DIR:-./backups}:/backups
+      # Optional: mount config file if you prefer INI over env vars
+      # - ./db-backup.ini:/app/db-backup.ini:ro
+    # Use host network to access MySQL on localhost
+    # Or specify a custom network if MySQL is in another container
+    network_mode: host
+    restart: "no"

@@ -1,0 +1,57 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * MySQL Database Backup CLI Tool
+ *
+ * @author Ben Johnson (ben@indiehd.com)
+ * @copyright Copyright (c) 2012-2026, Ben Johnson
+ * @license GNU General Public License, Version 3 (GPLv3)
+ */
+
+// Determine the correct autoload path (works both in development and when installed as a dependency)
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',     // When running from project root
+    __DIR__ . '/../../../autoload.php',      // When installed as a vendor dependency
+];
+
+$autoloadFound = false;
+foreach ($autoloadPaths as $autoloadPath) {
+    if (file_exists($autoloadPath)) {
+        require_once $autoloadPath;
+        $autoloadFound = true;
+        break;
+    }
+}
+
+if (!$autoloadFound) {
+    fwrite(STDERR, "Error: Could not find Composer autoload file. Please run 'composer install'." . PHP_EOL);
+    exit(1);
+}
+
+use IndieHD\MysqlDbBackup\DbBackup;
+
+try {
+    // Determine config file path (same directory as this executable, or project root)
+    $configPaths = [
+        __DIR__ . '/../db-backup.ini',           // When running from project root
+        getcwd() . '/db-backup.ini',             // Current working directory
+        __DIR__ . '/../../../../db-backup.ini',  // When installed as vendor dependency
+    ];
+
+    $configFile = null;
+    foreach ($configPaths as $path) {
+        if (file_exists($path)) {
+            $configFile = $path;
+            break;
+        }
+    }
+
+    // Create and run the backup
+    $backup = new DbBackup($configFile);
+    $backup->run();
+
+} catch (Exception $e) {
+    fwrite(STDERR, "Error: " . $e->getMessage() . PHP_EOL);
+    exit(1);
+}
