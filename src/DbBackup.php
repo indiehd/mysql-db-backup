@@ -138,7 +138,7 @@ class DbBackup
             }
         }
 
-        $this->mysqli->close();
+        // Connection will be closed automatically by destructor
     }
 
     /**
