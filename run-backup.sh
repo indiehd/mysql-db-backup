@@ -69,7 +69,8 @@ else
 fi
 
 # Add environment and volume mounts
-DOCKER_CMD="$DOCKER_CMD --env-file $SCRIPT_DIR/.env -v $SCRIPT_DIR/backups:/backups mysql-db-backup"
+# Run as current user to ensure backup files have correct ownership
+DOCKER_CMD="$DOCKER_CMD --env-file $SCRIPT_DIR/.env -v $SCRIPT_DIR/backups:/backups -u $(id -u):$(id -g) mysql-db-backup"
 
 # Run the backup
 eval $DOCKER_CMD
