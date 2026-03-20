@@ -190,6 +190,7 @@ class DbBackup
         // Build mysqldump command
         // --skip-comments: Ensures hash checks work correctly (comments include timestamps)
         // --single-transaction: Ensures consistency without locking tables
+        // sed filter: Removes MariaDB versioned comments (/*M!*/) that cause import issues with some clients
         $cmd = sprintf(
             'mysqldump --skip-comments --add-drop-table --default-character-set=utf8 ' .
             '--extended-insert --host=%s --quick --quote-names --routines --set-charset ' .
@@ -202,7 +203,8 @@ class DbBackup
             $cmd .= ' --password=' . escapeshellarg($this->config['password']);
         }
 
-        $cmd .= ' ' . escapeshellarg($database) . ' > ' . escapeshellarg($dumpFileName);
+        // Pipe through sed to strip MariaDB versioned comments (/*M!*/)
+        $cmd .= ' ' . escapeshellarg($database) . ' | sed \'/^\/\*M!/d\' > ' . escapeshellarg($dumpFileName);
 
         // Execute dump command
         $output = [];
