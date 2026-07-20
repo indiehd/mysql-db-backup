@@ -190,10 +190,15 @@ class DbBackup
         // Build mysqldump command
         // --skip-comments: Ensures hash checks work correctly (comments include timestamps)
         // --single-transaction: Ensures consistency without locking tables
+        // --no-tablespaces: Skips the tablespace dump, which on MySQL 8.0 requires the
+        //   global PROCESS privilege. Without it, unprivileged backup users get a
+        //   non-fatal "Access denied; you need (at least one of) the PROCESS
+        //   privilege(s)" error. Tablespace metadata isn't needed to restore a
+        //   standard InnoDB database, so skipping it is safe and silences the error.
         $cmd = sprintf(
             'mysqldump --skip-comments --add-drop-table --default-character-set=utf8 ' .
-            '--extended-insert --host=%s --quick --quote-names --routines --set-charset ' .
-            '--single-transaction --triggers --tz-utc --verbose --user=%s',
+            '--extended-insert --host=%s --no-tablespaces --quick --quote-names --routines ' .
+            '--set-charset --single-transaction --triggers --tz-utc --verbose --user=%s',
             escapeshellarg($this->config['hostname']),
             escapeshellarg($this->config['username'])
         );
